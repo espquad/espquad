@@ -1,0 +1,13 @@
+menu "Net Configuration"
+
+    config WIFI_SSID
+        string "Wifi SSID"
+    
+    config WIFI_PASSWORD
+        string "Wifi Password"
+
+    config WIFI_CONN_MAX_RETRY
+        int "Wifi Maximum Retry"
+        default 6
+
+endmenu
