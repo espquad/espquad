@@ -1,8 +1,9 @@
 #include "net.h"
+#include "net_wifi.h"
 
 
 
-static const char *TAG = "net";
+static const char *TAG = "net-wifi";
 
 static SemaphoreHandle_t s_semph_get_ip_addrs = NULL;
 
@@ -152,7 +153,7 @@ void wifi_shutdown(void)
     wifi_stop();
 }
 
-esp_err_t connect(void) {
+esp_err_t connect_to_wifi(void) {
     if (wifi_connect() != ESP_OK) {
         return ESP_FAIL;
     }

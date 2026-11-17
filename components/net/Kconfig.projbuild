@@ -1,13 +1,31 @@
 menu "Net Configuration"
 
-    config WIFI_SSID
-        string "Wifi SSID"
-    
-    config WIFI_PASSWORD
-        string "Wifi Password"
+    menu "Wifi"
 
-    config WIFI_CONN_MAX_RETRY
-        int "Wifi Maximum Retry"
-        default 6
+        config WIFI_SSID
+            string "Wifi SSID"
+        
+        config WIFI_PASSWORD
+            string "Wifi Password"
+
+        config WIFI_CONN_MAX_RETRY
+            int "Wifi Maximum Retry"
+            default 6
+        
+    endmenu
+
+    menu "Web Server"
+
+        config HTTP_REQ_BODY_MAX_LEN
+            int "HTTP Request Body Maximum Length"
+            default 255
+        
+        config HTTP_FORM_PARAM_VALUE_MAX_LEN
+            int "HTTP Request Body Param Value Maximum Length"
+            default 64
+        
+        
+    endmenu
+
 
 endmenu
