@@ -1,0 +1,74 @@
+# CONTROL MODULE
+
+SENSOR FUSION (gyro + accel)
+    Runs before outer ring
+    IN
+        IMU readings
+    OUT
+        Angle on X and Y
+
+P-controller (outer ring, angle)
+    AXIS
+        X, Y
+        (no compass => Z-rotation doesn't have a P-controller)
+    IN
+        angle target
+        angle measure (from sensor fusion)
+    OUT
+        rate target
+
+PID-controller per axis (inner ring, rate)
+    AXIS
+        X, Y
+        Z (rate target = 0 or constant from state)
+    IN
+        rate target (from outer ring)
+        rate measure (from gyro)
+        sat (from state, needed for anti-windup)
+    OUT
+        command (-1 <= c <= +1)
+
+Mixer
+    Runs after inner ring
+    IN
+        commands (from inner ring + detached collective)
+    OUT
+        duty cycles (to be persisted)
+        sats (to be saved on state)
+    In the case of saturation: Priority as follows:
+        roll & pitch
+        yaw
+
+
+SYNCRONIZATION
+    HTTP server runs in core 0
+        On POST, validates the values and writes them on the state
+            TODO: Evaluate weather thread safety is a concern based on the values being edited unatomically
+    
+    Main loop runs in core 1
+        Set a timer on a constant frequency that wakes up main task
+        Suspend main task
+
+        [Run outer ring]
+        Increment a counter
+        Based on the counter, evaluate weather to run inner ring (and keep the counter low to avoid BO)
+            [Run inner ring]
+
+        Dump state via telemetry
+
+APPLICATION STATE
+    Should contain at least:
+        roll                    # roll angle
+        roll_set                # roll setpoint
+        roll_dot                # roll rate
+        roll_dot_set            # roll rate setpoint
+        roll_sat                # roll saturation flag
+        roll_com                # roll command
+        roll_inner_imax         # roll integral max
+        roll_inner_kp           # roll inner controller proportional gain
+        roll_inner_ki           # roll inner controller integral gain
+        roll_inner_kd           # roll inner controller derivative gain
+        roll_outer_kp           # roll outer controller proportional gain
+
+TELEMETRY
+    Via Serial Studio Pro
