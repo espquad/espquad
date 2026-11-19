@@ -62,13 +62,15 @@ APPLICATION STATE
         roll_set                # roll setpoint
         roll_dot                # roll rate
         roll_dot_set            # roll rate setpoint
+        roll_dot_i              # roll rate integral
         roll_sat                # roll saturation flag
         roll_com                # roll command
-        roll_inner_imax         # roll integral max
-        roll_inner_kp           # roll inner controller proportional gain
-        roll_inner_ki           # roll inner controller integral gain
-        roll_inner_kd           # roll inner controller derivative gain
-        roll_outer_kp           # roll outer controller proportional gain
+        config
+            roll_inner_kp           # roll inner controller proportional gain
+            roll_inner_ki           # roll inner controller integral gain
+            roll_inner_kd           # roll inner controller derivative gain
+            roll_inner_imax         # roll integral max
+            roll_outer_kp           # roll outer controller proportional gain
 
 TELEMETRY
     Via Serial Studio Pro
