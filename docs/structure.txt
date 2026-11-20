@@ -57,20 +57,36 @@ SYNCRONIZATION
         Dump state via telemetry
 
 APPLICATION STATE
-    Should contain at least:
+
+    flight_mode                 # disarmed, idle, flight
+    mixer_max                   # maximum of the produced duty cycle [0, 1]
+    collective                  # duty cycle of the collective [0, 1]
+    motors
+        one_dc
+        two_dc
+        tree_dc
+        four_dc
+
+    For each rotation axis (for example roll):
         roll                    # roll angle
         roll_set                # roll setpoint
         roll_dot                # roll rate
         roll_dot_set            # roll rate setpoint
+        roll_dot_prev           # previous roll rate
         roll_dot_i              # roll rate integral
         roll_sat                # roll saturation flag
         roll_com                # roll command
+        roll_alpha              # alpha term of the roll derivative LPF
         config
-            roll_inner_kp           # roll inner controller proportional gain
-            roll_inner_ki           # roll inner controller integral gain
-            roll_inner_kd           # roll inner controller derivative gain
-            roll_inner_imax         # roll integral max
-            roll_outer_kp           # roll outer controller proportional gain
+            roll_outer_p_k           # roll outer controller proportional gain
+            roll_outer_max           # absolute maximum of the produced rate [°/s]
+            roll_inner_p_k           # roll inner controller proportional gain
+            roll_inner_i_k           # roll inner controller integral gain
+            roll_inner_d_k           # roll inner controller derivative gain
+            roll_inner_i_max         # absolute maximum of the roll integral
+            roll_inner_d_fc          # FC for the roll derivative LPF [Hz]
+            roll_inner_max           # absolute maximum of the produced command [0, 1]
 
 TELEMETRY
-    Via Serial Studio Pro
+    Push on UDP
+    Display via Serial Studio Pro
