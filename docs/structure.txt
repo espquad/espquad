@@ -1,3 +1,25 @@
+# CONVENTIONS
+
+Motors
+    M1: Rear Right, CW
+    M2: Front Right, CCW
+    M3: Rear Left, CCW
+    M4: Front Left, CW
+
+Axis
+    X
+        Orientation: Front
+        Rotation: Roll
+    Y
+        Orientation: Right
+        Rotation: Pitch
+    Z
+        Orientation: Upwards
+        Rotation: Yaw
+    
+    All rotations are signed according to the right hand rule.
+
+
 # CONTROL MODULE
 
 SENSOR FUSION (gyro + accel)
@@ -22,11 +44,27 @@ PID-controller per axis (inner ring, rate)
         X, Y
         Z (rate target = 0 or constant from state)
     IN
+        mode (from state)
         rate target (from outer ring)
         rate measure (from gyro)
         sat (from state, needed for anti-windup)
+        dot_prev (from state, needed for D)
+        alpha
     OUT
         command (-1 <= c <= +1)
+        integral
+        dot_prev (measured rate for later D)
+    GOTCHAS
+        If drone is in idle do not increment integral
+        dot_prev need to be always valorized with a real measure
+    FLOW
+        Compute e
+        Compute P term
+        Skip I term if (sat > 0 && e > 0) || (sat < 0 && e < 0) || mode == idle
+        Compute I term by
+            Derivative (using dot_prev and dt)
+            LPF (using roll_dot_d and alpha)
+        
 
 Mixer
     Runs after inner ring
@@ -35,9 +73,24 @@ Mixer
     OUT
         duty cycles (to be persisted)
         sats (to be saved on state)
-    In the case of saturation: Priority as follows:
-        roll & pitch
-        yaw
+    FLOW:
+        Linear transformation for each motor to get DCs
+            Examples:
+                motors.m1_dc = collective_com - roll_com - pitch_com + yaw_com
+                motors.m2_dc = collective_com - roll_com + pitch_com - yaw_com
+                motors.m3_dc = collective_com + roll_com - pitch_com - yaw_com
+                motors.m4_dc = collective_com + roll_com + pitch_com + yaw_com
+            In the case of saturation: Priority as follows:
+                roll_com
+                pitch_com
+                yaw_com
+        Backward linear transformation for the effective applied command
+        Compare effective applied command to requested command and set the sat flags for each axis
+            Applied more: +1
+            Exact: 0
+            Applied less: -1
+        
+
 
 
 SYNCRONIZATION
@@ -60,12 +113,12 @@ APPLICATION STATE
 
     flight_mode                 # disarmed, idle, flight
     mixer_max                   # maximum of the produced duty cycle [0, 1]
-    collective                  # duty cycle of the collective [0, 1]
+    collective_com              # duty cycle of the collective [0, 1]
     motors
-        one_dc
-        two_dc
-        tree_dc
-        four_dc
+        m1_dc
+        m2_dc
+        m3_dc
+        m4_dc
 
     For each rotation axis (for example roll):
         roll                    # roll angle
@@ -75,6 +128,7 @@ APPLICATION STATE
         roll_dot_prev           # previous roll rate
         roll_dot_i              # roll rate integral
         roll_sat                # roll saturation flag
+        roll_dot_d              # roll rate derivative
         roll_com                # roll command
         roll_alpha              # alpha term of the roll derivative LPF
         config
@@ -85,7 +139,6 @@ APPLICATION STATE
             roll_inner_d_k           # roll inner controller derivative gain
             roll_inner_i_max         # absolute maximum of the roll integral
             roll_inner_d_fc          # FC for the roll derivative LPF [Hz]
-            roll_inner_max           # absolute maximum of the produced command [0, 1]
 
 TELEMETRY
     Push on UDP
