@@ -136,6 +136,7 @@ SYNCRONIZATION
         Dump state via telemetry
 
 APPLICATION STATE (with mutation store, lambda support)
+    # REMARK: Implementation in progress. Actual code is the source of truth.
 
     flight_mode                 # disarmed, idle, flight
     collective_com              # duty cycle of the collective [0, 1]
