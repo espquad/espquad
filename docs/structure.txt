@@ -135,7 +135,7 @@ SYNCRONIZATION
 
         Dump state via telemetry
 
-APPLICATION STATE
+APPLICATION STATE (with mutation store, lambda support)
 
     flight_mode                 # disarmed, idle, flight
     collective_com              # duty cycle of the collective [0, 1]
@@ -170,3 +170,8 @@ APPLICATION STATE
 TELEMETRY
     Push on UDP
     Display via Serial Studio Pro
+    Evaluate approach:
+        1. Async UDP pusher on Core 0, app sends logs through a buffer and notify the pusher
+        2. Sync UDP pusher on Core 1, same task as the application, runs when the app invokes telemetry
+
+
