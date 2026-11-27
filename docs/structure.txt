@@ -89,8 +89,34 @@ Mixer
             Applied more: +1
             Exact: 0
             Applied less: -1
-        
+    
+    POC (R lang):
+        # constants
+        M <- matrix(c(-1,-1,1,1,-1,1,-1,1,1,-1,-1,1), nrow=4)
+        mixer_max <- 1
+        eps <- 1e-04
 
+        # input
+        com <- c(0.2,0.2,0)
+        thr <- 0.95
+        d <- M %*% com
+
+        # normalization
+        if (max(d) - min(d) > mixer_max) { d <- d / ((max(d) - min(d))/mixer_max) }
+
+        # throttle desaturation
+        thr_min <- -min(d)
+        thr_max <- mixer_max - max(d)
+        thr_desat <- ifelse(thr >= thr_min && thr <= thr_max, thr, ifelse(thr < thr_min, thr_min, thr_max))
+        d_fin <- d + thr_desat
+
+        # clamping (safety-net)
+        d_fin <- pmin(d_fin, mixer_max)
+        d_fin <- pmax(d_fin, 0)
+
+        # saturation flags
+        c_app <- t(M) %*% d_fin / 4
+        sat <- ifelse(com - c_app > eps, 1, ifelse(com - c_app < - eps, -1, 0))
 
 
 SYNCRONIZATION
@@ -112,13 +138,14 @@ SYNCRONIZATION
 APPLICATION STATE
 
     flight_mode                 # disarmed, idle, flight
-    mixer_max                   # maximum of the produced duty cycle [0, 1]
     collective_com              # duty cycle of the collective [0, 1]
     motors
         m1_dc
         m2_dc
         m3_dc
         m4_dc
+    config
+        mixer_max               # maximum of the produced duty cycle [0, 1]
 
     For each rotation axis (for example roll):
         roll                    # roll angle
