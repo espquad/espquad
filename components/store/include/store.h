@@ -3,6 +3,7 @@
 #include <esp_log.h>
 #include "esp_err.h"
 #include <stdio.h>
+#include "freertos/FreeRTOS.h"
 
 #define FLTMODE_DISARMED 0
 #define FLTMODE_IDLE 1
@@ -16,7 +17,7 @@ typedef struct {
     float inner_d_k;                        // inner controller derivative gain
     float inner_i_max;                      // absolute maximum of the integral
     float inner_d_fc;                       // FC for the derivative LPF [Hz]
-} control_config;
+} axis_config;
 
 typedef struct {
     float angle;                            // angle
@@ -29,31 +30,37 @@ typedef struct {
     float dot_d;                            // rate derivative
     float com;                              // command
     float alpha;                            // alpha term of the derivative LPF
-} control_state;
-
-typedef struct {
-    float mixer_max;                        // maximum of the produced duty cycle [0, 1]
-    control_config roll;
-    control_config pitch;
-    control_config yaw;
-} config_state;
+} axis_state;
 
 typedef struct {
     int16_t flight_mode;
+    float mixer_max;                        // maximum of the produced duty cycle [0, 1]
     float thr_com;                          // throttle command [0, 1]
+    axis_config axis [3];
+} config_state;
+
+typedef struct {
     float thr_app;                          // applied throttle after desaturation [0, 1]
     float motor_dc [4];                     // motor duty cycle [0, 1]
-    control_state roll;
-    control_state pitch;
-    control_state yaw;
+    axis_state axis [3];
+} runtime_state;
+
+typedef struct {
+    runtime_state runtime;
     config_state config;
 } state;
 
 
-state app_state;
+esp_err_t takeConfigLock();
 
-void initState();
+esp_err_t releaseConfigLock();
 
-state getState();
+esp_err_t initState();
 
-void setState(state newState);
+state const * getState();
+
+esp_err_t setConfigState(config_state * newConfigState);
+
+
+void handleFltModeUpdate(state * currentState, config_state * newConfigState);
+void handleFcUpdate(state * currentState, config_state * newConfigState, size_t axis);
